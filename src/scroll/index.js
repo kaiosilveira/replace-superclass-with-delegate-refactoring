@@ -2,12 +2,13 @@ import { CatalogItem } from '../catalog/item/index.js';
 
 export class Scroll {
   constructor(id, title, tags, dateLastCleaned) {
-    this._catalogItem = new CatalogItem(id, title, tags);
+    this._id = id;
+    this._catalogItem = new CatalogItem(null, title, tags);
     this._lastCleaned = dateLastCleaned;
   }
 
   get id() {
-    return this._catalogItem.id;
+    return this._id;
   }
 
   get title() {
