@@ -1,45 +1,12 @@
 [![Continuous Integration](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/actions/workflows/ci.yml/badge.svg)](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/actions/workflows/ci.yml)
 
-# Refactoring catalog repository template
-
-This is a quick template to help me get a new refactoring repo going.
-
-## Things to do after creating a repo off of this template
-
-1. Run `GITHUB_TOKEN=$(gh auth token) yarn tools:cli prepare-repository -r $(basename "$(pwd)")`. It will:
-
-- Update the `README.md` file with the actual repository name, CI badge, and commit history link
-- Update `package.json` with the repository's name and remote URL
-- Update the repo's homepage on GitHub with:
-  - A description
-  - A website link to https://github.com/kaiosilveira/refactoring
-  - The following labels: javascript, refactoring, replace-superclass-with-delegate-refactoring
-
-2. Replace the lorem ipsum text sections below with actual text
-
-## Useful commands
-
-- Generate markdown containing a diff with patch information based on a range of commits:
-
-```bash
-yarn tools:cli generate-diff -f <first_commit_sha> -l <last_commit_sha>
-```
-
-- To generate the commit history table for the last section, including the correct links:
-
-```bash
-yarn tools:cli generate-cmt-table -r replace-superclass-with-delegate-refactoring
-```
-
----
-
 ℹ️ _This repository is part of my Refactoring catalog based on Fowler's book with the same title. Please see [kaiosilveira/refactoring](https://github.com/kaiosilveira/refactoring) for more details._
 
 ---
 
 # Replace Superclass With Delegate
 
-**Formerly: Old name**
+**Formerly: Replace Inheritance with Delegation**
 
 <table>
 <thead>
@@ -51,7 +18,8 @@ yarn tools:cli generate-cmt-table -r replace-superclass-with-delegate-refactorin
 <td>
 
 ```javascript
-result = initial.code;
+class List { ... }
+class Stack extends List { ... }
 ```
 
 </td>
@@ -59,11 +27,13 @@ result = initial.code;
 <td>
 
 ```javascript
-result = newCode();
-
-function newCode() {
-  return 'new code';
+class Stack {
+  constructor() {
+    this._storage = new List();
+  }
 }
+
+class List { ... }
 ```
 
 </td>
@@ -71,58 +41,142 @@ function newCode() {
 </tbody>
 </table>
 
-**Inverse of: [Another refactoring](https://github.com/kaiosilveira/refactoring)**
-
-**Refactoring introduction and motivation** dolore sunt deserunt proident enim excepteur et cillum duis velit dolor. Aute proident laborum officia velit culpa enim occaecat officia sunt aute labore id anim minim. Eu minim esse eiusmod enim nulla Lorem. Enim velit in minim anim anim ad duis aute ipsum voluptate do nulla. Ad tempor sint dolore et ullamco aute nulla irure sunt commodo nulla aliquip.
+Inheritance works so well that sometimes we make mistakes. Just because a class has some similarities with another, that doesn't mean that there's a true inheritance relationship between them. This refactoring helps with breaking these wrong links.
 
 ## Working example
 
-**Working example general explanation** proident reprehenderit mollit non voluptate ea aliquip ad ipsum anim veniam non nostrud. Cupidatat labore occaecat labore veniam incididunt pariatur elit officia. Aute nisi in nulla non dolor ullamco ut dolore do irure sit nulla incididunt enim. Cupidatat aliquip minim culpa enim. Fugiat occaecat qui nostrud nostrud eu exercitation Lorem pariatur fugiat ea consectetur pariatur irure. Officia dolore veniam duis duis eu eiusmod cupidatat laboris duis ad proident adipisicing. Minim veniam consectetur ut deserunt fugiat id incididunt reprehenderit.
+Our working example contains scrolls and a catalog with items. Our `Scroll` class inherits from `CatalogItem`, which doesn't represent reality, since several scrolls can point to the same catalog item. Our goal is to break down this inheritance link.
 
 ### Test suite
 
-Occaecat et incididunt aliquip ex id dolore. Et excepteur et ea aute culpa fugiat consectetur veniam aliqua. Adipisicing amet reprehenderit elit qui.
-
-```javascript
-describe('functionBeingRefactored', () => {
-  it('should work', () => {
-    expect(0).toEqual(1);
-  });
-});
-```
-
-Magna ut tempor et ut elit culpa id minim Lorem aliqua laboris aliqua dolor. Irure mollit ad in et enim consequat cillum voluptate et amet esse. Fugiat incididunt ea nulla cupidatat magna enim adipisicing consequat aliquip commodo elit et. Mollit aute irure consequat sunt. Dolor consequat elit voluptate aute duis qui eu do veniam laborum elit quis.
+Since we have many moving pieces, our test suite is quite complex. Please refer to the initial commit to check the full implementation.
 
 ### Steps
 
-**Step 1 description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+We start by creating an instance of `catalogItem` to `Scroll`:
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+Scroll extends CatalogItem {
+   constructor(id, title, tags, dateLastCleaned) {
++    this._catalogItem = new CatalogItem(id, title, tags);
+   }
 ```
 
-**Step n description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+This is the first step to start delegating behavior to the reference and, later, break down the inheritance link.
+
+On to the delegations, we start with `id`:
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+export class Scroll extends CatalogItem {
++  get id() {
++    return this._catalogItem.id;
++  }
 ```
 
-And that's it!
+Then, `title`:
+
+```diff
+export class Scroll extends CatalogItem {
++  get title() {
++    return this._catalogItem.title;
++  }
+```
+
+And, then, `hasTag`:
+
+```diff
+export class Scroll extends CatalogItem {
++  hasTag(aString) {
++    return this._catalogItem.hasTag(aString);
++  }
+```
+
+Now we can formally break the inheritance link:
+
+```diff
+-export class Scroll extends CatalogItem {
++export class Scroll {
+   constructor(id, title, tags, dateLastCleaned) {
+-    super(id, title, tags);
+   }
+```
+
+The main refactoring is done, but we still need to fix the modeling error (i.e.: linking one scroll to one catalog item). We start by defining a different `id` to `Scroll`, so it stops using `CatalogItem`'s:
+
+```diff
+ export class Scroll {
+   constructor(id, title, tags, dateLastCleaned) {
+-    this._catalogItem = new CatalogItem(id, title, tags);
++    this._id = id;
++    this._catalogItem = new CatalogItem(null, title, tags);
+     this._lastCleaned = dateLastCleaned;
+   }
+
+   get id() {
+-    return this._catalogItem.id;
++    return this._id;
+   }
+```
+
+Then, as an intermediary step, we provide catalog data to `Scroll`:
+
+```diff
+-export function loadScrollsFrom(aDocument) {
++export function loadScrollsFrom(aDocument, catalog) {
+   const scrolls = aDocument.map(
+     record =>
+       new Scroll(
+         record.id,
+         record.catalogData.title,
+         record.catalogData.tags,
+-        new ManagedDateTime(record.lastCleaned)
++        new ManagedDateTime(record.lastCleaned),
++        record.catalogData.id,
++        catalog
+       )
+   );
+```
+
+And now we can dynamically resolve `catalogItem` from `catalog` at `Scroll`:
+
+```diff
+ export class Scroll {
+-  constructor(id, title, tags, dateLastCleaned) {
++  constructor(id, title, tags, dateLastCleaned, catalogID, catalog) {
+     this._id = id;
+-    this._catalogItem = new CatalogItem(null, title, tags);
++    this._catalogItem = catalog.get(catalogID);
+     this._lastCleaned = dateLastCleaned;
+   }
+```
+
+Finally, we can now remove the now unused `title` and `tags` from `Scroll`:
+
+```diff
+ export class Scroll {
+-  constructor(id, title, tags, dateLastCleaned, catalogID, catalog) {
++  constructor(id, dateLastCleaned, catalogID, catalog) {
+     this._id = id;
+     this._catalogItem = catalog.get(catalogID);
+     this._lastCleaned = dateLastCleaned;
+```
+
+And that's it! Scroll no longer inherits from `CatalogItem`.
 
 ### Commit history
 
 Below there's the commit history for the steps detailed above.
 
-| Commit SHA                                                                  | Message                  |
-| --------------------------------------------------------------------------- | ------------------------ |
-| [cmt-sha-1](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit-SHA-1) | description of commit #1 |
-| [cmt-sha-2](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit-SHA-2) | description of commit #2 |
-| [cmt-sha-n](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit-SHA-n) | description of commit #n |
+| Commit SHA                                                                                                                              | Message                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [1b8bf10](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/1b8bf10ba6f3734e2f7a59b8e87c025546d2c632) | add instance of `catalogItem` to `Scroll`                                        |
+| [66fe0cd](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/66fe0cda5f10d10c066407d679f7844d1ef3669b) | delegate `id` to `catalogItem` at `Scroll`                                       |
+| [e7e70d2](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/e7e70d200d2c8234117ac0e0562dea2723c342d8) | delegate `title` to `CatalogItem` at `Scroll`                                    |
+| [d26ef79](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/d26ef792f9a3f579ef876dbf44b923e3cb8be5d2) | delegate `hasTag` to `catalogItem` at `Scroll`                                   |
+| [07a4ed6](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/07a4ed68a49e2a61280e4ea109a48890b5b79ebd) | remove inheritance of `CatalogItem` from `Scroll`                                |
+| [9c32850](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/9c32850692fefb1fa98abf88a91d60a2e40be40e) | set `id` as `Scroll`'s id and no longer `CatalogItem`'s                          |
+| [47d9762](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/47d9762c36d3c0660b33f31fcdab707feee3a13a) | provide `catalogData.id` and `catalog` to `Scroll` at `loadScrollsFrom`          |
+| [c393cac](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/c393caceebcf6e1b5dcc1f47eabbce6f37ce6a00) | dynamically resolve `catalogItem` from `catalog` at `Scroll` initialization time |
+| [502b47b](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commit/502b47b7a020fba5c7e1f4b2175955fc84a6eeee) | remove `title` and `tags` from `Scroll`                                          |
 
 For the full commit history for this project, check the [Commit History tab](https://github.com/kaiosilveira/replace-superclass-with-delegate-refactoring/commits/main).
