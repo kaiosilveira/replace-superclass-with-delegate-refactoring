@@ -11,6 +11,10 @@ export class Scroll extends CatalogItem {
     return this._catalogItem.id;
   }
 
+  get title() {
+    return this._catalogItem.title;
+  }
+
   needsCleaning(targetDate) {
     const threshold = this.hasTag('revered') ? 700 : 1500;
     return this.daysSinceLastCleaning(targetDate) > threshold;
