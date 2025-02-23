@@ -1,21 +1,29 @@
 import { loadScrollsFrom } from '.';
+import { CatalogItem } from '../../catalog/item';
 
 describe('loadScrollsFrom', () => {
   it('should load a list of scrolls and map their data', () => {
     const aDocument = [
       {
         id: 1,
-        catalogData: { title: 'Revered Scroll', tags: ['revered'] },
+        catalogData: { id: 1, title: 'Revered Scroll', tags: ['revered'] },
         lastCleaned: '2021-01-01',
       },
       {
         id: 2,
-        catalogData: { title: 'Regular Scroll', tags: [] },
+        catalogData: { id: 2, title: 'Regular Scroll', tags: [] },
         lastCleaned: '2021-01-01',
       },
     ];
 
-    const scrolls = loadScrollsFrom(aDocument);
+    const catalog = {
+      get: id => {
+        const r = aDocument.find(record => record.id === id);
+        return new CatalogItem(r.id, r.catalogData.title, r.catalogData.tags);
+      },
+    };
+
+    const scrolls = loadScrollsFrom(aDocument, catalog);
 
     expect(scrolls.length).toBe(2);
 
