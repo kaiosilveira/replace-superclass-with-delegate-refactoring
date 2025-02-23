@@ -3,6 +3,7 @@ import { CatalogItem } from '../catalog/item/index.js';
 export class Scroll extends CatalogItem {
   constructor(id, title, tags, dateLastCleaned) {
     super(id, title, tags);
+    this._catalogItem = new CatalogItem(id, title, tags);
     this._lastCleaned = dateLastCleaned;
   }
 
